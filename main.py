@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm
 from flask_gravatar import Gravatar
-from forms import RegisterForm, CreatePostForm
+from forms import RegisterForm, CreatePostForm, LoginForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -19,6 +19,15 @@ Bootstrap(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# flask login
+login_manager = LoginManager()
+login_manager.init_app(app=app)
+
+# user loader callback function
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 ##CONFIGURE TABLES
 class User(UserMixin, db.Model):
@@ -70,9 +79,32 @@ def register():
     return render_template("register.html", form=registration)
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template("login.html")
+    # form object
+    login_form = LoginForm()
+    if login_form.validate_on_submit():
+        # get the attributes
+        email = login_form.email.data
+        password = login_form.password.data
+        
+        # find the user using the email
+        user = User.query.filter_by(email=email).first()
+        # if user is not found - display error message
+        if not user:
+            flash('Email does not exist, please try again')
+            return redirect(url_for('login'))
+        # else if passwords do not match
+        elif not check_password_hash(user.password, password):
+            flash('Password invalid, try again')
+            return redirect(url_for('login'))
+        # if user exists and passwords match - login user
+        else:
+            # log in user
+            login_user(user)
+            return redirect(url_for('get_all_posts', user=user))
+
+    return render_template("login.html", logged_in=current_user.is_authenticated, form=login_form)
 
 
 @app.route('/logout')

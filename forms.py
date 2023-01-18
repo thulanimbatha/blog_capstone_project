@@ -17,3 +17,9 @@ class RegisterForm(FlaskForm):
     password = PasswordField(label="Password", validators=[DataRequired(), Length(min=8, message="Password needs 8 or more characters")])
     name = StringField(label="Name", validators=[DataRequired()])
     submit = SubmitField(label="Sign in")
+
+# WTForm - Login page
+class LoginForm(FlaskForm):
+    email = StringField(label="Email", validators=[DataRequired(), Email(message="Please enter valid email!")])
+    password = PasswordField(label="Password", validators=[DataRequired(), Length(min=8, message="Password needs 8 or more characters")])
+    submit = SubmitField(label="Login")
