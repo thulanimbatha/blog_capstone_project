@@ -53,7 +53,7 @@ with app.app_context():
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts, name=current_user.name, logged_in=current_user.is_authenticated)
+    return render_template("index.html", all_posts=posts, logged_in=current_user.is_authenticated)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -61,6 +61,12 @@ def register():
     # instantiate form object
     registration = RegisterForm()
     if registration.validate_on_submit():
+
+        # check if user email exists
+        if User.query.filter_by(email=registration.email.data).first():
+            flash("You have already signed up with that email, login instead!")
+            return redirect(url_for('login'))
+
         # create new user
         new_user = User(
             name = registration.name.data,
@@ -75,6 +81,8 @@ def register():
         # add user to the database
         db.session.add(new_user)
         db.session.commit()
+        # login user
+        login_user(new_user)
         return redirect(url_for("get_all_posts"))
     return render_template("register.html", form=registration)
 
@@ -109,6 +117,8 @@ def login():
 
 @app.route('/logout')
 def logout():
+    # logout
+    logout_user()
     return redirect(url_for('get_all_posts'))
 
 
