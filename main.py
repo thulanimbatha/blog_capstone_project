@@ -53,7 +53,7 @@ with app.app_context():
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts)
+    return render_template("index.html", all_posts=posts, name=current_user.name, logged_in=current_user.is_authenticated)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -102,7 +102,7 @@ def login():
         else:
             # log in user
             login_user(user)
-            return redirect(url_for('get_all_posts', user=user))
+            return redirect(url_for('get_all_posts'))
 
     return render_template("login.html", logged_in=current_user.is_authenticated, form=login_form)
 
