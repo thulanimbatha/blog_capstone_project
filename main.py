@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, abort
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
@@ -9,6 +9,7 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm
 from flask_gravatar import Gravatar
 from forms import RegisterForm, CreatePostForm, LoginForm
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -28,6 +29,17 @@ login_manager.init_app(app=app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# create admin-only decorator
+def admin_only(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # if id != 1 then return 403 error message
+        if current_user.id != 1:
+            return abort(403)
+        # else continue with route function
+        return f(*args, **kwargs)
+    return decorated_function
 
 ##CONFIGURE TABLES
 class User(UserMixin, db.Model):
@@ -137,7 +149,8 @@ def about():
 def contact():
     return render_template("contact.html")
 
-
+# decorator
+@admin_only
 @app.route("/new-post")
 def add_new_post():
     form = CreatePostForm()
@@ -155,7 +168,8 @@ def add_new_post():
         return redirect(url_for("get_all_posts"))
     return render_template("make-post.html", form=form)
 
-
+# decorator
+@admin_only
 @app.route("/edit-post/<int:post_id>")
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
@@ -177,7 +191,8 @@ def edit_post(post_id):
 
     return render_template("make-post.html", form=edit_form)
 
-
+# decorator
+@admin_only
 @app.route("/delete/<int:post_id>")
 def delete_post(post_id):
     post_to_delete = BlogPost.query.get(post_id)
