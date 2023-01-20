@@ -23,3 +23,8 @@ class LoginForm(FlaskForm):
     email = StringField(label="Email", validators=[DataRequired(), Email(message="Please enter valid email!")])
     password = PasswordField(label="Password", validators=[DataRequired(), Length(min=8, message="Password needs 8 or more characters")])
     submit = SubmitField(label="Login")
+
+# Comment form for users to comment on a blog post
+class CommentForm(FlaskForm):
+    comment = CKEditorField(label="Comment", validators=[DataRequired()])
+    submit = SubmitField("Submit Comment")

@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm
 from flask_gravatar import Gravatar
-from forms import RegisterForm, CreatePostForm, LoginForm
+from forms import RegisterForm, CreatePostForm, LoginForm, CommentForm
 from functools import wraps
 
 app = Flask(__name__)
@@ -149,7 +149,8 @@ def logout():
 @app.route("/post/<int:post_id>")
 def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
-    return render_template("post.html", post=requested_post)
+    comment_form = CommentForm()
+    return render_template("post.html", post=requested_post, form=comment_form)
 
 
 @app.route("/about")
