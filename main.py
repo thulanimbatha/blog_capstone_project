@@ -49,10 +49,22 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(250), unique=True, nullable=False)
     password = db.Column(db.String(250))
 
+    # create one-to-many relationship: one user can write many posts
+    # relationship with "author" in BlogPost class
+    # parent - each user has a post(s)
+    posts = relationship("BlogPost", back_populates="author")
+
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
-    author = db.Column(db.String(250), nullable=False)
+
+    # create foreign key - eg. each posts written by author 5 will have foreign = 5
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id")) # user.id is the name of the table
+    # relationship with "posts" in User class
+    # child - each blog post has an author
+    author = relationship("User", back_populates="posts")
+
+    # author = db.Column(db.String(250), nullable=False)
     title = db.Column(db.String(250), unique=True, nullable=False)
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
@@ -151,7 +163,7 @@ def contact():
 
 # decorator
 @admin_only
-@app.route("/new-post")
+@app.route("/new-post", methods=["GET", "POST"])
 def add_new_post():
     form = CreatePostForm()
     if form.validate_on_submit():
@@ -166,11 +178,11 @@ def add_new_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("get_all_posts"))
-    return render_template("make-post.html", form=form)
+    return render_template("make-post.html", form=form, current_user=current_user)
 
 # decorator
 @admin_only
-@app.route("/edit-post/<int:post_id>")
+@app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
     edit_form = CreatePostForm(
