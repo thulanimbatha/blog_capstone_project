@@ -54,6 +54,9 @@ class User(UserMixin, db.Model):
     # parent - each user has a post(s)
     posts = relationship("BlogPost", back_populates="author")
 
+    # each user has possibly many comments on blog posts
+    comments = relationship("Comment", back_populates="comment_author")
+
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
@@ -70,6 +73,15 @@ class BlogPost(db.Model):
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
+
+# each user will have many possible comments
+class Comment(db.Model):
+    __tablename__ = "comments"
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    # each comments has 1 author
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    comment_author = relationship("User", back_populates="comments")
 
 with app.app_context():
     db.create_all()
